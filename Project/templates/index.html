@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Animal Recognition</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Animal Recognition App</h1>
+
+        <!-- Image Upload Functionality -->
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" name="file" id="fileInput" accept="image/*" required>
+            <div id="preview-container">
+                <p>No image selected</p>
+            </div>
+            <button type="submit">Upload and Recognize</button>
+        </form>
+
+        <!-- Video Button -->
+        <button id="videoButton">Open Camera for Realtime Recognition</button>
+
+        <!-- Modal for Video -->
+        <div id="videoModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span id="closeModal" style="cursor: pointer; font-size: 24px;">&times;</span>
+                <video id="videoElement" autoplay style="width: 100%; border-radius: 10px;"></video>
+                <button id="recognizeButton">Recognize Animal</button>
+            </div>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Image Upload Functionality
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('preview-container');
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewContainer.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview" width="300" style="border-radius: 10px; margin: 10px 0;">
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewContainer.innerHTML = `<p>No image selected</p>`;
+            }
+        });
+
+        // Form submission for image recognition
+        const form = document.getElementById('uploadForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const response = await fetch('/upload', { method: 'POST', body: formData });
+            const result = await response.json();
+            document.getElementById('result').innerHTML = `
+                <h2>Animal: ${result.animal}</h2>
+                <p>Description: ${result.description}</p>
+            `;
+        });
+
+        // Video Modal Functionality
+        const videoButton = document.getElementById('videoButton');
+        const videoModal = document.getElementById('videoModal');
+        const closeModal = document.getElementById('closeModal');
+        const videoElement = document.getElementById('videoElement');
+        const recognizeButton = document.getElementById('recognizeButton');
+
+        // Open Camera Modal
+        videoButton.addEventListener('click', async () => {
+            videoModal.style.display = 'block';
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoElement.srcObject = stream;
+            } catch (error) {
+                alert('Error accessing camera: ' + error.message);
+            }
+        });
+
+        // Close Camera Modal
+        closeModal.addEventListener('click', () => {
+            videoModal.style.display = 'none';
+            const stream = videoElement.srcObject;
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            videoElement.srcObject = null;
+        });
+
+        // Recognize Animal in Realtime
+        recognizeButton.addEventListener('click', async () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg');
+            const response = await fetch('/predict-realtime', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: dataUrl })
+            });
+            const result = await response.json();
+            document.getElementById('result').innerHTML = `
+                <h2>Animal: ${result.animal}</h2>
+                <p>Description: ${result.description}</p>
+            `;
+        });
+    </script>
+
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 80%;
+            max-width: 500px;
+        }
+    </style>
+</body>
+</html>
