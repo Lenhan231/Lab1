@@ -16,6 +16,11 @@
             <div id="preview-container">
                 <p>No image selected</p>
             </div>
+            <label for="modelSelect">Select Model:</label>
+            <select id="modelSelect" name="model_type">
+                <option value="keras">Keras Model</option>
+                <option value="torch">Torch Model</option>
+            </select>
             <button type="submit">Upload and Recognize</button>
         </form>
 
@@ -27,6 +32,11 @@
             <div class="modal-content">
                 <span id="closeModal" style="cursor: pointer; font-size: 24px;">&times;</span>
                 <video id="videoElement" autoplay style="width: 100%; border-radius: 10px;"></video>
+                <label for="realtimeModelSelect">Select Model:</label>
+                <select id="realtimeModelSelect">
+                    <option value="keras">Keras Model</option>
+                    <option value="torch">Torch Model</option>
+                </select>
                 <button id="recognizeButton">Recognize Animal</button>
             </div>
         </div>
@@ -59,6 +69,8 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(form);
+            const modelType = document.getElementById('modelSelect').value;
+            formData.append('model_type', modelType);
             const response = await fetch('/upload', { method: 'POST', body: formData });
             const result = await response.json();
             document.getElementById('result').innerHTML = `
@@ -103,10 +115,11 @@
             const context = canvas.getContext('2d');
             context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
             const dataUrl = canvas.toDataURL('image/jpeg');
+            const modelType = document.getElementById('realtimeModelSelect').value;
             const response = await fetch('/predict-realtime', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: dataUrl })
+                body: JSON.stringify({ image: dataUrl, model_type: modelType })
             });
             const result = await response.json();
             document.getElementById('result').innerHTML = `
