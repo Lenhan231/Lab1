@@ -17,8 +17,7 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 # Load Keras models
 try:
-    model = load_model(r"D:\FPTUniversity\Terminal4\DAP391m\Lab1\animal_model_best.h5")
-    model_realtime = load_model(r"D:\FPTUniversity\Terminal4\DAP391m\Lab1\animal_recognition_model.h5")
+    model = load_model(r"Project\animal_model_best.h5")
     print("✅ Keras models loaded successfully.")
 except Exception as e:
     print(f"❌ Error loading Keras models: {e}")
@@ -96,29 +95,29 @@ class SimpleCNN(nn.Module):
         x = self.fc3(x)
         return x
 
-# Load PyTorch model
-model_path = "D:/FPTUniversity/Terminal4/DAP391m/Lab1/best_cnn.pt"
+# # Load PyTorch model
+# model_path = "D:/FPTUniversity/Terminal4/DAP391m/Lab1/best_cnn.pt"
 
-if os.path.exists(model_path):
-    try:
-        model_best_cnn = SimpleCNN()
-        checkpoint = torch.load(model_path, map_location=torch.device('cpu'), weights_only=False)
-        model_best_cnn.load_state_dict(checkpoint['model'])
-        model_best_cnn.eval()
-        print("✅ PyTorch model loaded successfully!")
-    except Exception as e:
-        model_best_cnn = None
-        print(f"❌ Error loading PyTorch model: {e}")
-else:
-    model_best_cnn = None
-    print("❌ PyTorch model file not found!")
+# if os.path.exists(model_path):
+#     try:
+#         model_best_cnn = SimpleCNN()
+#         checkpoint = torch.load(model_path, map_location=torch.device('cpu'), weights_only=False)
+#         model_best_cnn.load_state_dict(checkpoint['model'])
+#         model_best_cnn.eval()
+#         print("✅ PyTorch model loaded successfully!")
+#     except Exception as e:
+#         model_best_cnn = None
+#         print(f"❌ Error loading PyTorch model: {e}")
+# else:
+#     model_best_cnn = None
+#     print("❌ PyTorch model file not found!")
 
 # Class labels
 class_names = ["butterfly", "cat", "chicken", "cow", "dog", "elephant", "horse", "sheep", "spider", "squirrel"]
 
 # Configure Gemini API
 try:
-    with open(r"D:\FPTUniversity\Terminal4\DAP391m\Lab1\Project\api_key.json", "r") as file:
+    with open(r"Project\api_key.json", "r") as file:
         data = json.load(file)
     genai.configure(api_key=data["key"])
     model_gemini = genai.GenerativeModel('gemini-pro')
