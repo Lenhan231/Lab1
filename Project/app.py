@@ -44,19 +44,6 @@ def predict_animal(image_path, model_type='keras'):
 
     if model_type == 'keras':
         predictions = model.predict(img_array)
-    elif model_type == 'torch':
-        if model_best_cnn is None:
-            return "Error: PyTorch model not loaded."
-
-        transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-        img_tensor = transform(Image.open(image_path)).unsqueeze(0)
-
-        with torch.no_grad():
-            predictions = model_best_cnn(img_tensor).numpy()
 
     predicted_class = class_names[np.argmax(predictions)]
     return predicted_class
@@ -75,31 +62,6 @@ def describe_animal(image_path):
         chat = model_gemini.start_chat(history=[])
         response = chat.send_message(prompt)
         return response.text
-
-# Real-time prediction for webcam images
-def predict_animal_realtime(frame, model_type='keras'):
-    """Predicts the animal in a real-time webcam frame."""
-    img = cv2.resize(frame, (224, 224))
-    img_array = img_to_array(img) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
-
-    if model_type == 'keras':
-        predictions = model_realtime.predict(img_array)
-    elif model_type == 'torch':
-        if model_best_cnn is None:
-            return "Error: PyTorch model not loaded."
-
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-        img_tensor = transform(img).unsqueeze(0)
-
-        with torch.no_grad():
-            predictions = model_best_cnn(img_tensor).numpy()
-
-    predicted_class = class_names[np.argmax(predictions)]
-    return predicted_class
 
 # Flask Routes
 @app.route('/')
